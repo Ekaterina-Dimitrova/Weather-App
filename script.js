@@ -36,7 +36,7 @@ async function fetchWeather(city) {
 
     const { latitude, longitude, name } = geocodingData.results[0];
     const weatherResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`
     );
     if (!weatherResponse.ok) {
       throw new Error('Unable to fetch weather data.');
@@ -68,6 +68,41 @@ function displayWeather(city, data) {
   weatherIcon.setAttribute('aria-label', weatherCondition.textContent); // Accessibility
 
   error.textContent = ''; // Clear any previous error messages
+
+  // If daily forecast data is present, display 5-day forecast
+  if (data.daily) {
+    displayForecast(data.daily);
+  }
+}
+
+const forecastCards = document.getElementById('forecast-cards');
+
+function displayForecast(daily) {
+  // daily: { time: [], temperature_2m_max: [], temperature_2m_min: [], weathercode: [] }
+  forecastCards.innerHTML = '';
+  const times = daily.time || [];
+  const maxTemps = daily.temperature_2m_max || [];
+  const minTemps = daily.temperature_2m_min || [];
+  const codes = daily.weathercode || [];
+
+  for (let i = 0; i < times.length; i++) {
+    const date = new Date(times[i]);
+    const dayName = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const max = maxTemps[i];
+    const min = minTemps[i];
+    const code = codes[i];
+    const iconClass = getWeatherIcon(code);
+
+    const card = document.createElement('div');
+    card.className = 'forecast-card';
+    card.innerHTML = `
+      <div class="forecast-day">${dayName}</div>
+      <div class="forecast-icon"><i class="fas ${iconClass}"></i></div>
+      <div class="forecast-temps"> <span class="max">${Math.round(max)}°C</span> / <span class="min">${Math.round(min)}°C</span></div>
+    `;
+
+    forecastCards.appendChild(card);
+  }
 }
 
 function getWeatherCondition(weathercode) {
@@ -153,8 +188,8 @@ function showError(message) {
   cityName.textContent = '--';
   temperature.textContent = '--°C';
   weatherCondition.textContent = '--';
-  humidity.textContent = 'Humidity: --%';
   windSpeed.textContent = 'Wind Speed: -- m/s';
-  weatherIcon.src = '';
-  weatherIcon.alt = '';
+  weatherIcon.className = 'fas fa-question';
+  // clear forecast
+  if (forecastCards) forecastCards.innerHTML = '';
 }
