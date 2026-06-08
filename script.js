@@ -8,6 +8,60 @@ const windSpeed = document.getElementById('wind-speed');
 const loading = document.getElementById('loading');
 const error = document.getElementById('error');
 const tempToggle = document.getElementById('temp-toggle');
+const recentList = document.getElementById('recent-list');
+
+const RECENT_KEY = 'recentCities';
+
+function loadRecentSearches() {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveRecentSearches(arr) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
+  } catch (e) {
+    // ignore storage errors
+  }
+}
+
+function addRecentSearch(city) {
+  if (!city) return;
+  const normalized = city.trim();
+  if (!normalized) return;
+
+  const list = loadRecentSearches();
+  // remove existing (case-insensitive)
+  const lower = normalized.toLowerCase();
+  const filtered = list.filter((c) => c.toLowerCase() !== lower);
+  // add to front
+  filtered.unshift(normalized);
+  // limit to 5
+  const limited = filtered.slice(0, 5);
+  saveRecentSearches(limited);
+  renderRecentSearches();
+}
+
+function renderRecentSearches() {
+  if (!recentList) return;
+  const items = loadRecentSearches();
+  recentList.innerHTML = '';
+  items.forEach((city) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'recent-item';
+    btn.textContent = city;
+    btn.addEventListener('click', () => {
+      searchInput.value = city;
+      fetchWeather(city);
+    });
+    recentList.appendChild(btn);
+  });
+}
 
 searchForm.addEventListener('submit', (e) => {
   e.preventDefault(); // Prevent the form from refreshing the page
@@ -63,6 +117,8 @@ async function fetchWeather(city) {
     const weatherData = await weatherResponse.json();
 
     displayWeather(name, weatherData);
+    // Save recent search (move to front, no duplicates)
+    addRecentSearch(name);
   } catch (err) {
     showError(err.message);
   } finally {

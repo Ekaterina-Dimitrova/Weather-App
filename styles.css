@@ -190,6 +190,36 @@ h1 {
   transform: translateY(1px);
 }
 
+.recent-searches {
+  margin-top: 12px;
+  text-align: left;
+}
+
+.recent-searches h4 {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+
+.recent-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.recent-item {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.recent-item:active {
+  transform: translateY(1px);
+}
+
 
 /* Responsive Design */
 @media (max-width: 480px) {
