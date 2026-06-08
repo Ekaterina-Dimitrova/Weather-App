@@ -7,6 +7,7 @@ const weatherIcon = document.getElementById('weather-icon');
 const windSpeed = document.getElementById('wind-speed');
 const loading = document.getElementById('loading');
 const error = document.getElementById('error');
+const tempToggle = document.getElementById('temp-toggle');
 
 searchForm.addEventListener('submit', (e) => {
   e.preventDefault(); // Prevent the form from refreshing the page
@@ -17,6 +18,23 @@ searchForm.addEventListener('submit', (e) => {
     showError('Please enter a city name.'); // Show error if input is empty
   }
 });
+
+// Temperature unit state: true = Celsius, false = Fahrenheit
+let isCelsius = true;
+let lastWeatherData = null;
+let lastCity = null;
+
+if (tempToggle) {
+  tempToggle.addEventListener('click', () => {
+    isCelsius = !isCelsius;
+    tempToggle.textContent = isCelsius ? '°C' : '°F';
+    tempToggle.setAttribute('aria-pressed', String(!isCelsius));
+    // Re-render using cached data without new API call
+    if (lastWeatherData && lastCity) {
+      displayWeather(lastCity, lastWeatherData);
+    }
+  });
+}
 
 const geocodingUrl = 'https://geocoding-api.open-meteo.com/v1/search?name=';
 
@@ -53,10 +71,13 @@ async function fetchWeather(city) {
 }
 
 function displayWeather(city, data) {
+  // cache for toggling units without re-fetching
+  lastWeatherData = data;
+  lastCity = city;
   const { current_weather } = data;
 
   cityName.textContent = city;
-  temperature.textContent = `${current_weather.temperature}°C`;
+  temperature.textContent = `${formatTemp(current_weather.temperature)}`;
   weatherCondition.textContent = getWeatherCondition(
     current_weather.weathercode
   );
@@ -98,11 +119,20 @@ function displayForecast(daily) {
     card.innerHTML = `
       <div class="forecast-day">${dayName}</div>
       <div class="forecast-icon"><i class="fas ${iconClass}"></i></div>
-      <div class="forecast-temps"> <span class="max">${Math.round(max)}°C</span> / <span class="min">${Math.round(min)}°C</span></div>
+      <div class="forecast-temps"> <span class="max">${formatTemp(max)}</span> / <span class="min">${formatTemp(min)}</span></div>
     `;
 
     forecastCards.appendChild(card);
   }
+}
+
+function celsiusToFahrenheit(c) {
+  return c * 9 / 5 + 32;
+}
+
+function formatTemp(celsius) {
+  if (isCelsius) return `${Math.round(celsius)}°C`;
+  return `${Math.round(celsiusToFahrenheit(celsius))}°F`;
 }
 
 function getWeatherCondition(weathercode) {

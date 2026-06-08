@@ -176,6 +176,20 @@ h1 {
   font-weight: 600;
 }
 
+.temp-toggle {
+  margin-left: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  cursor: pointer;
+}
+
+.temp-toggle:active {
+  transform: translateY(1px);
+}
+
 
 /* Responsive Design */
 @media (max-width: 480px) {
